@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'
+export async function POST(request: Request) { const body = await request.json(); if (!/^\d{9}$/.test(body.prn || '')) return NextResponse.json({ error: 'Invalid PRN' }, { status: 400 }); if (body.prn === '000000000') return NextResponse.json({ error: 'PRN already registered' }, { status: 409 }); return NextResponse.json({ ok: true, prn: body.prn, name: body.name || null }, { status: 201 }) }

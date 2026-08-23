@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --font-sans: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+}
+
+:root { --background: #07100b; --foreground: #d6f7d0; --card: #0b1710; --border: #234b2b; --muted: #86a48b; --primary: #7dff83; --radius: 0.25rem; }
+* { box-sizing: border-box; }
+html { background: var(--background); }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; }
+::selection { background: #7dff83; color: #07100b; }
+.scanlines { background-image: linear-gradient(rgba(125,255,131,.025) 1px, transparent 1px); background-size: 100% 4px; }
+.terminal-glow { text-shadow: 0 0 8px rgba(125,255,131,.28); }
+.pixel-text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; font-weight: 700; font-size: 1.05em; letter-spacing: .12em; text-transform: uppercase; line-height: 1.65; text-shadow: 1px 0 0 rgba(125,255,131,.2), 0 0 8px rgba(125,255,131,.28); }
+.ascii-text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; font-weight: 500; font-size: 1em; letter-spacing: .08em; line-height: 1.65; text-rendering: geometricPrecision; }
+.pixel-heading { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; font-weight: 700; font-size: 1.05em; letter-spacing: .1em; text-transform: uppercase; line-height: 1.7; text-shadow: 1px 0 0 rgba(125,255,131,.18), 0 0 9px rgba(125,255,131,.26); }
+.ascii-label { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+.uppercase { text-transform: uppercase; }
+input { outline: none; }
+input:focus { box-shadow: 0 0 0 1px #7dff83, 0 0 16px rgba(125,255,131,.16); }
+.link { color: #7dff83; text-decoration: underline; text-underline-offset: 3px; }
+.link:hover { color: #ffd166; }
+.blink { animation: blink 1.1s steps(2,end) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
