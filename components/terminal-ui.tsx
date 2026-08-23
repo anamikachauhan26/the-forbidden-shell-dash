@@ -14,15 +14,58 @@ export function PRNInput({ value, onChange, label = 'PRN', name = 'prn' }: { val
   return <label className="block space-y-2 text-xs text-muted"><span>{label} <span className="text-primary">(9 digits)</span></span><input name={name} value={value} onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 9))} inputMode="numeric" autoComplete="off" className="w-full border border-border bg-card px-3 py-3 font-mono text-sm text-primary placeholder:text-muted/50" placeholder="e.g. 202401234" aria-invalid={invalid} />{invalid && <span className="block text-amber-300">ERR: PRN must contain exactly 9 digits.</span>}</label>
 }
 
-export function LevelMenu({ solved = 2 }: { solved?: number }) { return <div className="border border-border bg-card p-4 font-mono text-sm">{levels.map((level, i) => { const state = i < solved ? 'OK' : i === solved ? '>' : 'LK'; return <div key={level} className={`flex gap-3 py-1 ${state === '>' ? 'text-primary terminal-glow' : state === 'LK' ? 'text-muted/60' : 'text-foreground'}`}><span className="w-5 text-right">{i + 1}.</span><span className="flex-1">{level}</span><span className="w-8">[{state}]</span></div> })}</div> }
-
-export function FlagSubmit({ level = 3 }: { level?: number }) {
-  const [flag, setFlag] = useState(''); const [message, setMessage] = useState(''); const [cooldown, setCooldown] = useState(0); const [attempts, setAttempts] = useState(0)
-  useEffect(() => { if (!cooldown) return; const timer = setInterval(() => setCooldown(c => Math.max(0, c - 1)), 1000); return () => clearInterval(timer) }, [cooldown])
-  async function submit(e: FormEvent) { e.preventDefault(); if (!flag || cooldown) return; const next = attempts + 1; setAttempts(next); if (next >= 3) setCooldown(10); setMessage(flag === 'flag{welcome_to_the_shell}' ? 'ACCESS GRANTED — level solved.' : 'ACCESS DENIED — incorrect flag.'); setFlag('') }
-  return <form onSubmit={submit} className="border border-border bg-card p-4"><div className="mb-3 flex items-center justify-between text-xs"><span className="text-muted">LEVEL {String(level).padStart(2, '0')} FLAG INPUT</span><span className="text-amber-300">{cooldown ? `cooldown: ${cooldown}s` : `${Math.max(0, 10 - attempts)} attempts left`}</span></div><div className="flex gap-2"><input value={flag} onChange={e => setFlag(e.target.value)} className="min-w-0 flex-1 border border-border bg-background px-3 py-3 font-mono text-sm text-primary" placeholder="TFS{}..." /><button disabled={!flag || !!cooldown} className="border border-primary px-4 text-xs text-primary hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40">SUBMIT</button></div>{message && <p className={`mt-3 text-xs ${message.includes('GRANTED') ? 'text-primary' : 'text-amber-300'}`}>{message}</p>}</form>
+export function LevelMenu({ solvedLevels = [] }: { solvedLevels?: number[] }) {
+  const solvedSet = new Set(solvedLevels)
+  const next = solvedLevels.length + 1
+  return <div className="border border-border bg-card p-4 font-mono text-sm">{levels.map((level, i) => { const n = i + 1; const state = solvedSet.has(n) ? 'OK' : n === next ? '>' : 'LK'; return <div key={level} className={`flex gap-3 py-1 ${state === '>' ? 'text-primary terminal-glow' : state === 'LK' ? 'text-muted/60' : 'text-foreground'}`}><span className="w-5 text-right">{n}.</span><span className="flex-1">{level}</span><span className="w-8">[{state}]</span></div> })}</div>
 }
 
-export function LeaderboardTable() { const rows = [{prn:'2024•••184', solved:14, time:'Today, 14:02'}, {prn:'2024•••072', solved:12, time:'Today, 13:48'}, {prn:'2023•••901', solved:11, time:'Today, 13:41'}, {prn:'2024•••337', solved:9, time:'Today, 13:36'}, {prn:'2023•••615', solved:7, time:'Today, 13:12'}]; return <div className="overflow-x-auto border border-border bg-card"><table className="w-full text-left text-xs"><thead className="border-b border-border text-muted"><tr><th className="px-4 py-3">RANK</th><th className="px-4 py-3">PRN</th><th className="px-4 py-3">LEVELS SOLVED</th><th className="px-4 py-3">LAST SOLVE</th></tr></thead><tbody>{rows.map((r,i) => <tr key={r.prn} className="border-b border-border/60 last:border-0"><td className="px-4 py-3 text-primary">{String(i+1).padStart(2,'0')}</td><td className="px-4 py-3">{r.prn}</td><td className="px-4 py-3">{r.solved}/15</td><td className="px-4 py-3 text-muted">{r.time}</td></tr>)}</tbody></table></div> }
+export function FlagSubmit({ level = 3, onSuccess }: { level?: number; onSuccess?: () => void }) {
+  const [flag, setFlag] = useState(''); const [message, setMessage] = useState(''); const [granted, setGranted] = useState(false); const [cooldown, setCooldown] = useState(0); const [busy, setBusy] = useState(false)
+  useEffect(() => { if (!cooldown) return; const timer = setInterval(() => setCooldown(c => Math.max(0, c - 1)), 1000); return () => clearInterval(timer) }, [cooldown])
+  async function submit(e: FormEvent) {
+    e.preventDefault(); if (!flag || cooldown || busy) return
+    setBusy(true); setMessage('')
+    try {
+      const res = await fetch('/api/submit-flag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ level, flag }) })
+      if (res.status === 401) { window.location.href = '/login'; return }
+      const data = await res.json().catch(() => ({ error: 'Unexpected response.' }))
+      if (res.ok) { setMessage(`ACCESS GRANTED — level ${String(level).padStart(2, '0')} solved.`); setGranted(true); setFlag(''); onSuccess?.() }
+      else if (res.status === 429) { const retry = Number(res.headers.get('Retry-After')) || 10; setCooldown(retry); setMessage(`RATE LIMITED — retry in ${retry}s.`); setGranted(false) }
+      else { setMessage(`ACCESS DENIED — ${data.error || 'incorrect flag.'}`); setGranted(false); setFlag('') }
+    } catch { setMessage('NETWORK ERROR — is the server running?'); setGranted(false) } finally { setBusy(false) }
+  }
+  return <form onSubmit={submit} className="border border-border bg-card p-4"><div className="mb-3 flex items-center justify-between text-xs"><span className="text-muted">LEVEL {String(level).padStart(2, '0')} FLAG INPUT</span><span className="text-amber-300">{cooldown ? `cooldown: ${cooldown}s` : ''}</span></div><div className="flex gap-2"><input value={flag} onChange={e => setFlag(e.target.value)} className="min-w-0 flex-1 border border-border bg-background px-3 py-3 font-mono text-sm text-primary" placeholder="TFS{}..." /><button disabled={!flag || !!cooldown || busy} className="border border-primary px-4 text-xs text-primary hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40">SUBMIT</button></div>{message && <p className={`mt-3 text-xs ${granted ? 'text-primary' : 'text-amber-300'}`}>{message}</p>}</form>
+}
+
+type LeaderboardRow = { prn: string; levels_solved: number; last_solve_at: string | null }
+
+function formatTime(iso: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+export function LeaderboardTable({ pollMs = 7000 }: { pollMs?: number }) {
+  const [rows, setRows] = useState<LeaderboardRow[]>([])
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const res = await fetch('/api/leaderboard')
+        if (!active) return
+        if (!res.ok) { setError(res.status === 429 ? 'rate limited — retrying…' : 'failed to load leaderboard'); return }
+        const json = await res.json()
+        setRows(json.data); setError('')
+      } catch { if (active) setError('network error') }
+    }
+    load()
+    const timer = setInterval(load, pollMs)
+    return () => { active = false; clearInterval(timer) }
+  }, [pollMs])
+  if (error) return <div className="border border-border bg-card p-4 text-xs text-amber-300">ERR: {error}</div>
+  return <div className="overflow-x-auto border border-border bg-card"><table className="w-full text-left text-xs"><thead className="border-b border-border text-muted"><tr><th className="px-4 py-3">RANK</th><th className="px-4 py-3">PRN</th><th className="px-4 py-3">LEVELS SOLVED</th><th className="px-4 py-3">LAST SOLVE</th></tr></thead><tbody>{rows.length === 0 ? <tr><td colSpan={4} className="px-4 py-6 text-center text-muted">no operators registered yet.</td></tr> : rows.map((r, i) => <tr key={r.prn} className="border-b border-border/60 last:border-0"><td className="px-4 py-3 text-primary">{String(i + 1).padStart(2, '0')}</td><td className="px-4 py-3">{r.prn}</td><td className="px-4 py-3">{r.levels_solved}/15</td><td className="px-4 py-3 text-muted">{formatTime(r.last_solve_at)}</td></tr>)}</tbody></table></div>
+}
 
 export function FooterPrompt() { return <p className="mt-8 text-xs text-muted"><span className="text-primary">shell@ctf:~$</span> <Link className="link" href="/login">login</Link> or <Link className="link" href="/register">register</Link><span className="blink ml-1">_</span></p> }
