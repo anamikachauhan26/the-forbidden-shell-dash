@@ -118,3 +118,22 @@ pnpm start
 | `/api/progress` | GET | cookie | Solved levels + next level for the player |
 | `/api/submit-flag` | POST | cookie | Sequential enforcement; SHA-256 compare; 10 req/min per PRN (429 + Retry-After) |
 | `/api/leaderboard` | GET | public | Full PRNs, sorted solved DESC then earliest last-solve ASC; 1 req/s per IP |
+
+## Admin Portal
+
+Single hardcoded operator account for the invigilator (credentials in `lib/admin-auth.ts`, server-side only — `TZadmin` / `TZadmin`).
+
+- `/admin/login` — separate admin session (`admin_session` httpOnly cookie); student and admin sessions never collide
+- All `/admin/*` pages and `/api/admin/*` routes are guarded server-side via `middleware.ts`
+- `/admin/dashboard`:
+  - Live counts of registered students and flags submitted (5s poll)
+  - **Export** — downloads `forbidden-shell-results-<timestamp>.xlsx` with full PRNs, names, solve counts, created/last-solve timestamps, and per-level solve times
+  - **Reset** — wipes players + progress (flag hashes preserved); requires typing `RESET`; every wipe is appended to `data/admin-reset.log`
+
+| Admin endpoint | Method | Notes |
+|---|---|---|
+| `/api/admin/login` | POST | Sets admin cookie |
+| `/api/admin/logout` | POST | Clears admin cookie |
+| `/api/admin/stats` | GET | Student/flag counts |
+| `/api/admin/export` | GET | Streams .xlsx download |
+| `/api/admin/reset` | POST | Body `{ "confirm": "RESET" }` required; logged to `data/admin-reset.log` |

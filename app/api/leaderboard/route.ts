@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { getAllPlayerStats } from '@/lib/stats'
 
 const MIN_INTERVAL_MS = 1000
 
@@ -33,19 +33,7 @@ export async function GET(request: Request) {
     )
   }
 
-  const rows = db
-    .prepare(
-      `SELECT p.prn AS prn,
-              COUNT(x.level) AS levels_solved,
-              MAX(x.solved_at) AS last_solve_at
-       FROM players p
-       LEFT JOIN progress x ON x.prn = p.prn
-       GROUP BY p.prn
-       ORDER BY levels_solved DESC, last_solve_at ASC`
-    )
-    .all() as { prn: string; levels_solved: number; last_solve_at: string | null }[]
-
-  const data = rows.map((r) => ({
+  const data = getAllPlayerStats().map((r) => ({
     prn: r.prn,
     levels_solved: r.levels_solved,
     last_solve_at: r.last_solve_at,
