@@ -19,6 +19,6 @@ export async function GET(request: Request) {
     name: getPlayer(prn)?.name ?? null,
     solvedLevels,
     solvedCount: solvedLevels.length,
-    nextLevel: Math.min(15, solvedLevels.length + 1),
+    nextLevel: Math.min(30, solvedLevels.length + 1),
   })
 }

@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     { header: 'Levels Solved', key: 'levels_solved', width: 14 },
     { header: 'Last Solve At', key: 'last_solve_at', width: 28 },
     { header: 'Created At', key: 'created_at', width: 28 },
-    ...Array.from({ length: 15 }, (_, i) => ({
+    ...Array.from({ length: 30 }, (_, i) => ({
       header: `Level ${i + 1}`,
       key: `level_${i + 1}`,
       width: 28,
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       last_solve_at: stat.last_solve_at,
       created_at: createdAt,
     }
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 30; i++) {
       row[`level_${i}`] = levels?.get(i) ?? null
     }
     sheet.addRow(row)

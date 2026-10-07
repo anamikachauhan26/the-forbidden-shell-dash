@@ -3,7 +3,7 @@ import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { db, DB_PATH } from '../lib/db.ts'
 
-const LEVELS = 15
+const LEVELS = 30
 
 const fileArg = process.argv[2]
 const candidates = [
@@ -27,7 +27,7 @@ if (!process.argv[2] && !/flag/i.test(path.basename(flagsFile))) {
 const text = fs.readFileSync(flagsFile, 'utf8')
 const flags: string[] = []
 for (const line of text.split(/\r?\n/)) {
-  const m = line.match(/^\s*\|\s*(\d{1,2})\s*\|[^|]*\|\s*[^|]+\|\s*`(TFS\{[^}]+\})`/)
+  const m = line.match(/^\s*\|\s*(\d{1,2})\s*\|[^|]*\|\s*`(TFS\{[^}]+\})`/)
   if (!m) continue
   const level = Number(m[1])
   if (level !== flags.length + 1) continue

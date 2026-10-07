@@ -55,8 +55,8 @@ export async function POST(request: Request) {
   const level = typeof body.level === 'number' ? Math.trunc(body.level) : NaN
   const flag = typeof body.flag === 'string' ? body.flag.trim() : ''
 
-  if (!Number.isInteger(level) || level < 1 || level > 15 || !flag) {
-    return NextResponse.json({ error: 'Invalid submission. Provide a level (1-15) and flag.' }, { status: 400 })
+  if (!Number.isInteger(level) || level < 1 || level > 30 || !flag) {
+    return NextResponse.json({ error: 'Invalid submission. Provide a level (1-30) and flag.' }, { status: 400 })
   }
 
   const solvedCount = (
@@ -99,5 +99,5 @@ export async function POST(request: Request) {
     throw err
   }
 
-  return NextResponse.json({ ok: true, solved: level, nextLevel: Math.min(15, level + 1) })
+  return NextResponse.json({ ok: true, solved: level, nextLevel: Math.min(30, level + 1) })
 }

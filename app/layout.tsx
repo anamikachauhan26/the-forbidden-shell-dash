@@ -8,7 +8,7 @@ const pixelBody = VT323({ subsets: ['latin'], weight: '400', variable: '--font-p
 
 export const metadata: Metadata = {
   title: 'The Forbidden Shell | CTF',
-  description: 'A 15-level capture-the-flag challenge.',
+  description: 'A 30-level capture-the-flag challenge.',
   generator: 'v0.app',
   icons: {
     icon: [

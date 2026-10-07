@@ -19,13 +19,13 @@ function openDb(): Database.Database {
     );
 
     CREATE TABLE IF NOT EXISTS flags (
-      level     INTEGER PRIMARY KEY CHECK (level BETWEEN 1 AND 15),
+      level     INTEGER PRIMARY KEY CHECK (level BETWEEN 1 AND 30),
       flag_hash TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS progress (
       prn       TEXT NOT NULL REFERENCES players(prn),
-      level     INTEGER NOT NULL CHECK (level BETWEEN 1 AND 15),
+      level     INTEGER NOT NULL CHECK (level BETWEEN 1 AND 30),
       solved_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
       PRIMARY KEY (prn, level)
     );

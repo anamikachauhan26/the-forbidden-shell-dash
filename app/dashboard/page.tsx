@@ -40,7 +40,7 @@ export default function DashboardPage() {
           )}
           {progress && (
             <p className="mt-2 text-xs text-muted">
-              Progress: {progress.solvedCount}/15 levels solved · current node: {String(progress.nextLevel).padStart(2, '0')}
+              Progress: {progress.solvedCount}/30 levels solved · current node: {String(progress.nextLevel).padStart(2, '0')}
             </p>
           )}
           {progress && <div className="mt-8"><LevelMenu solvedLevels={progress.solvedLevels} /></div>}
