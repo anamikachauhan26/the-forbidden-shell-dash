@@ -28,6 +28,9 @@ function rateLimit(prn: string): { ok: boolean; retryAfter: number } {
 
   bucket.tokens -= 1
   buckets.set(prn, bucket)
+  if (buckets.size > 5000) {
+    for (const [key, b] of buckets) if (now - b.last > 60_000) buckets.delete(key)
+  }
   return { ok: true, retryAfter: 0 }
 }
 
@@ -59,13 +62,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid submission. Provide a level (1-30) and flag.' }, { status: 400 })
   }
 
-  const solvedCount = (
-    db.prepare('SELECT COUNT(*) AS c FROM progress WHERE prn = ?').get(prn) as { c: number }
-  ).c
+  const solvedRows = db
+    .prepare('SELECT level FROM progress WHERE prn = ?')
+    .all(prn) as { level: number }[]
+  const solved = new Set(solvedRows.map((r) => r.level))
+  const solvedCount = solved.size
+
+  if (solved.has(level)) {
+    return NextResponse.json({ error: 'Level already solved.' }, { status: 400 })
+  }
 
   if (level !== solvedCount + 1) {
     return NextResponse.json(
-      { error: solvedCount >= level ? 'Level already solved.' : `Level locked. Solve level ${solvedCount + 1} first.` },
+      { error: `Level locked. Solve level ${solvedCount + 1} first.` },
       { status: 400 },
     )
   }

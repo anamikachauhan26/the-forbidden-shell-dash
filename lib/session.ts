@@ -18,9 +18,17 @@ export function clearSessionCookie(res: NextResponse) {
 
 export function getPrnFromRequest(request: Request): string | null {
   const header = request.headers.get('cookie') || ''
-  const match = header.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=(\\d{9})`))
-  if (match) return match[1]
-  return null
+  const match = header.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]*)`))
+  if (!match) return null
+  let prn: string
+  try {
+    prn = decodeURIComponent(match[1]).trim()
+  } catch {
+    return null
+  }
+  // Reject prefix collisions (e.g. a 10-digit value must not auth as its
+  // first 9 digits) by validating the whole cookie value.
+  return /^\d{9}$/.test(prn) ? prn : null
 }
 
 export function getPlayer(prn: string): { prn: string; name: string | null } | undefined {

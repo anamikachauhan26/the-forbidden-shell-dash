@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { ADMIN_SESSION_COOKIE, ADMIN_SESSION_TOKEN } from '@/lib/admin-auth'
+import { ADMIN_SESSION_COOKIE, ADMIN_SESSION_TOKEN, safeEqual } from '@/lib/admin-auth'
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -10,7 +10,7 @@ export default function proxy(request: NextRequest) {
   }
 
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value
-  const authed = !!token && token === ADMIN_SESSION_TOKEN
+  const authed = typeof token === 'string' && safeEqual(token, ADMIN_SESSION_TOKEN)
 
   if (pathname.startsWith('/api/admin/')) {
     if (!authed) {

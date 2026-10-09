@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { FlagSubmit, LevelMenu, Shell } from '@/components/terminal-ui'
+import { FlagSubmit, LevelMenu, Shell, levels } from '@/components/terminal-ui'
 
 type Progress = {
   prn: string
@@ -38,14 +38,18 @@ export default function DashboardPage() {
           {state === 'anon' && (
             <p className="mt-2 text-xs text-amber-300">No active session. <a className="link" href="/login">Login</a> or <a className="link" href="/register">register</a> first.</p>
           )}
-          {progress && (
-            <p className="mt-2 text-xs text-muted">
-              Progress: {progress.solvedCount}/30 levels solved · current node: {String(progress.nextLevel).padStart(2, '0')}
+          {progress && (progress.solvedCount >= levels.length ? (
+            <p className="mt-2 text-xs font-bold text-primary terminal-glow">
+              ALL {levels.length} NODES CLEARED — the shell has nothing left to hide.
             </p>
-          )}
+          ) : (
+            <p className="mt-2 text-xs text-muted">
+              Progress: {progress.solvedCount}/{levels.length} levels solved · current node: {String(progress.nextLevel).padStart(2, '0')}
+            </p>
+          ))}
           {progress && <div className="mt-8"><LevelMenu solvedLevels={progress.solvedLevels} /></div>}
         </section>
-        {progress && (
+        {progress && progress.solvedCount < levels.length && (
           <aside>
             <FlagSubmit level={progress.nextLevel} onSuccess={load} />
             <p className="mt-4 text-xs leading-5 text-muted">Tip: flags are case-sensitive. Read everything. Especially the things that look unimportant.</p>

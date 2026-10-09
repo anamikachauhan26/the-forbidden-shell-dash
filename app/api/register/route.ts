@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       typeof err === 'object' &&
       err !== null &&
       'code' in err &&
-      (err as { code?: string }).code === 'SQLITE_CONSTRAINT_PRIMARYKEY'
+      String((err as { code?: unknown }).code).startsWith('SQLITE_CONSTRAINT')
     ) {
       return NextResponse.json({ error: 'PRN already registered' }, { status: 409 })
     }

@@ -11,8 +11,8 @@ export const ADMIN_SESSION_COOKIE = 'admin_session'
 export const ADMIN_SESSION_TOKEN = 'tfs-admin-7c4b9e21f6d8a350'
 
 // Constant-time string compare in pure JS so this module stays Edge-runtime
-// safe (middleware.ts imports it, and Edge cannot load node:crypto).
-function safeEqual(a: string, b: string): boolean {
+// safe (proxy.ts imports it, and Edge cannot load node:crypto).
+export function safeEqual(a: string, b: string): boolean {
   const len = Math.max(a.length, b.length)
   let diff = a.length ^ b.length
   for (let i = 0; i < len; i++) {
