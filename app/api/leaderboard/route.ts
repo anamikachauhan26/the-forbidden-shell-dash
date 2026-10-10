@@ -1,43 +1,22 @@
 import { NextResponse } from 'next/server'
 import { getAllPlayerStats } from '@/lib/stats'
 
-const MIN_INTERVAL_MS = 1000
+export const dynamic = 'force-dynamic'
 
-type LastHit = { t: number }
-declare global {
-  // eslint-disable-next-line no-var
-  var __tfsLbHits: Map<string, LastHit> | undefined
-}
-const hits = globalThis.__tfsLbHits ?? new Map<string, LastHit>()
-globalThis.__tfsLbHits = hits
+const CACHE_MS = 3000
+let cache: { at: number; body: string } | null = null
 
-function ipRateLimit(ip: string): boolean {
+export async function GET() {
   const now = Date.now()
-  const hit = hits.get(ip)
-  if (hit && now - hit.t < MIN_INTERVAL_MS) return false
-  hits.set(ip, { t: now })
-  if (hits.size > 5000) {
-    for (const [key, h] of hits) if (now - h.t > 60_000) hits.delete(key)
+  if (!cache || now - cache.at > CACHE_MS) {
+    const data = getAllPlayerStats().map((r) => ({
+      prn: r.prn,
+      levels_solved: r.levels_solved,
+      last_solve_at: r.last_solve_at,
+    }))
+    cache = { at: now, body: JSON.stringify({ data, updatedAt: new Date(now).toISOString() }) }
   }
-  return true
-}
-
-export async function GET(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'
-
-  if (!ipRateLimit(ip)) {
-    return NextResponse.json(
-      { error: 'Slow down.' },
-      { status: 429, headers: { 'Retry-After': '1' } },
-    )
-  }
-
-  const data = getAllPlayerStats().map((r) => ({
-    prn: r.prn,
-    levels_solved: r.levels_solved,
-    last_solve_at: r.last_solve_at,
-  }))
-
-  return NextResponse.json({ data, updatedAt: new Date().toISOString() })
+  return new NextResponse(cache.body, {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  })
 }
